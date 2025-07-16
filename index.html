@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Portfolio Builder</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom CSS variables for light/dark mode */
+        :root {
+            --background-color: #f8fafc; /* slate-50 */
+            --text-color: #1e293b; /* slate-800 */
+            --panel-bg: #ffffff;
+            --border-color: #e2e8f0; /* slate-200 */
+            --primary-button-bg: #3b82f6; /* blue-500 */
+            --primary-button-text: #ffffff;
+            --secondary-button-bg: #e2e8f0; /* slate-200 */
+            --secondary-button-text: #1e293b;
+            --card-bg: #f1f5f9; /* slate-100 */
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1; /* slate-300 */
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark {
+            --background-color: #1e293b; /* slate-800 */
+            --text-color: #f8fafc; /* slate-50 */
+            --panel-bg: #334155; /* slate-700 */
+            --border-color: #475569; /* slate-600 */
+            --primary-button-bg: #60a5fa; /* blue-400 */
+            --primary-button-text: #1e293b;
+            --secondary-button-bg: #475569; /* slate-600 */
+            --secondary-button-text: #f8fafc;
+            --card-bg: #475569; /* slate-600 */
+            --input-bg: #334155;
+            --input-border: #64748b; /* slate-500 */
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color); /* shadow-md */
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-button-bg);
+            color: var(--primary-button-text);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 500; /* font-medium */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-button-bg); /* Slightly darker on hover */
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-button-bg);
+            color: var(--secondary-button-text);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 500; /* font-medium */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color); /* Slightly darker on hover */
+            transform: translateY(-1px);
+        }
+
+        .input-field {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Live Preview Styles */
+        .preview-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Hide overflow from the iframe */
+            border-radius: 0.75rem;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1); /* Inner shadow for preview */
+        }
+
+        .preview-iframe {
+            width: 100%; /* Default to desktop */
+            height: 100%;
+            border: none;
+            border-radius: 0.5rem;
+            transition: width 0.3s ease-in-out;
+            transform-origin: top center; /* For potential scaling effects */
+        }
+
+        /* Responsive preview widths */
+        .preview-iframe.mobile {
+            width: 375px; /* iPhone X width */
+            height: 667px; /* iPhone X height */
+            max-width: 90%; /* Ensure it fits smaller screens */
+            max-height: 90%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            border: 8px solid #333;
+            border-radius: 20px;
+        }
+
+        .preview-iframe.tablet {
+            width: 768px; /* iPad portrait width */
+            height: 1024px; /* iPad portrait height */
+            max-width: 95%;
+            max-height: 95%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            border: 10px solid #333;
+            border-radius: 15px;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-button-bg);
+        }
+
+        /* Glassmorphism effect */
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: var(--text-color); /* Ensure text is readable */
+        }
+        .dark .glassmorphism {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            margin: auto;
+            padding: 2.5rem; /* p-10 */
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); /* shadow-xl */
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--primary-button-bg);
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 transition-colors duration-300 shadow-sm">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-50">AI-Powered Portfolio Builder</h1>
+        <div class="flex items-center space-x-4">
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="btn-secondary flex items-center space-x-2">
+                <i class="fas fa-sun" id="sun-icon"></i>
+                <i class="fas fa-moon hidden" id="moon-icon"></i>
+                <span>Toggle Theme</span>
+            </button>
+            <!-- Deploy & Export Buttons -->
+            <button class="btn-primary">
+                <i class="fas fa-rocket mr-2"></i>Deploy
+            </button>
+            <button class="btn-secondary">
+                <i class="fas fa-download mr-2"></i>Export
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex flex-1 p-4 space-x-4 overflow-hidden">
+        <!-- Left Panel: Section Picker & Controls -->
+        <aside class="w-1/4 min-w-[280px] flex flex-col space-y-4 panel p-4 overflow-y-auto">
+            <h2 class="text-xl font-semibold mb-4">Sections</h2>
+            <div id="section-picker" class="flex flex-col space-y-3">
+                <button class="btn-secondary section-btn active" data-section="about">
+                    <i class="fas fa-user mr-2"></i>About Me
+                </button>
+                <button class="btn-secondary section-btn" data-section="projects">
+                    <i class="fas fa-folder-open mr-2"></i>Projects
+                </button>
+                <button class="btn-secondary section-btn" data-section="skills">
+                    <i class="fas fa-code mr-2"></i>Skills
+                </button>
+                <button class="btn-secondary section-btn" data-section="testimonials">
+                    <i class="fas fa-comments mr-2"></i>Testimonials
+                </button>
+                <button class="btn-secondary section-btn" data-section="contact">
+                    <i class="fas fa-envelope mr-2"></i>Contact
+                </button>
+                <button class="btn-secondary">
+                    <i class="fas fa-plus-circle mr-2"></i>Add Custom Section
+                </button>
+            </div>
+
+            <hr class="my-4 border-t border-gray-200 dark:border-gray-600">
+
+            <h2 class="text-xl font-semibold mb-4">AI Assistant</h2>
+            <div class="flex flex-col space-y-3">
+                <button id="ai-write-button" class="btn-primary">
+                    <i class="fas fa-magic mr-2"></i>Write for Me (AI)
+                </button>
+                <textarea id="ai-output" class="input-field w-full h-32 resize-y" placeholder="AI-generated text will appear here..."></textarea>
+            </div>
+
+            <hr class="my-4 border-t border-gray-200 dark:border-gray-600">
+
+            <h2 class="text-xl font-semibold mb-4">Integrations</h2>
+            <div class="flex flex-col space-y-3">
+                <button id="github-integration-button" class="btn-secondary">
+                    <i class="fab fa-github mr-2"></i>Fetch GitHub Repos
+                </button>
+                <div id="github-repos" class="text-sm text-gray-600 dark:text-gray-400">
+                    <!-- GitHub repos will be dynamically loaded here -->
+                    <p>No repos fetched yet.</p>
+                </div>
+            </div>
+
+            <hr class="my-4 border-t border-gray-200 dark:border-gray-600">
+
+            <h2 class="text-xl font-semibold mb-4">Media & Add-ons</h2>
+            <div class="flex flex-col space-y-3">
+                <button class="btn-secondary">
+                    <i class="fas fa-image mr-2"></i>Upload Avatar
+                </button>
+                <button class="btn-secondary">
+                    <i class="fas fa-video mr-2"></i>Embed Video
+                </button>
+                <button class="btn-secondary">
+                    <i class="fas fa-palette mr-2"></i>Unsplash/Pixabay Images
+                </button>
+            </div>
+
+            <!-- Placeholder for Collaboration -->
+            <hr class="my-4 border-t border-gray-200 dark:border-gray-600">
+            <h2 class="text-xl font-semibold mb-4">Collaboration (Optional)</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Real-time collaboration features (like live editing and commenting) would be implemented here using a backend like Firebase Firestore.
+                <br>
+                <span class="font-semibold">User ID:</span> <span id="current-user-id">Loading...</span>
+            </p>
+        </aside>
+
+        <!-- Right Panel: Live Preview Editor -->
+        <section class="flex-1 flex flex-col space-y-4 panel p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Live Preview</h2>
+                <div class="flex space-x-2">
+                    <button id="desktop-view" class="btn-secondary view-toggle active" data-view="desktop">
+                        <i class="fas fa-desktop"></i>
+                    </button>
+                    <button id="tablet-view" class="btn-secondary view-toggle" data-view="tablet">
+                        <i class="fas fa-tablet-alt"></i>
+                    </button>
+                    <button id="mobile-view" class="btn-secondary view-toggle" data-view="mobile">
+                        <i class="fas fa-mobile-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 preview-wrapper relative">
+                <iframe id="portfolio-preview" class="preview-iframe" srcdoc="
+                    <!DOCTYPE html>
+                    <html lang='en'>
+                    <head>
+                        <meta charset='UTF-8'>
+                        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                        <title>Portfolio Preview</title>
+                        <script src='https://cdn.tailwindcss.com'></script>
+                        <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' rel='stylesheet'>
+                        <style>
+                            body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; color: #333; margin: 0; padding: 1rem; }
+                            .section { background-color: #ffffff; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+                            .section h2 { font-size: 1.75rem; font-weight: 600; margin-bottom: 1rem; color: #2563eb; }
+                            .section p, .section li { font-size: 1rem; line-height: 1.6; color: #475569; }
+                            .section ul { list-style: disc; margin-left: 1.25rem; }
+                            .project-card { background-color: #f1f5f9; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #cbd5e1; }
+                            .project-card h3 { font-size: 1.25rem; font-weight: 600; color: #1e40af; margin-bottom: 0.5rem; }
+                            .contact-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+                            .contact-form input, .contact-form textarea { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; }
+                            .contact-form button { background-color: #2563eb; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; }
+                            .glassmorphism-preview { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+                        </style>
+                    </head>
+                    <body>
+                        <div id='portfolio-content'>
+                            <section id='about-section' class='section'>
+                                <h2>About Me</h2>
+                                <p id='about-text'>I am a passionate developer with expertise in web technologies. I love building innovative solutions and contributing to open-source projects.</p>
+                            </section>
+                            <section id='projects-section' class='section hidden'>
+                                <h2>My Projects</h2>
+                                <div class='project-card'>
+                                    <h3>Project Alpha</h3>
+                                    <p>A web application built with React and Node.js for task management.</p>
+                                    <p class='text-sm text-gray-500'>Tech Stack: React, Node.js, MongoDB</p>
+                                </div>
+                                <div class='project-card'>
+                                    <h3>Project Beta</h3>
+                                    <p>A mobile game developed using Unity and C#.</p>
+                                    <p class='text-sm text-gray-500'>Tech Stack: Unity, C#</p>
+                                </div>
+                            </section>
+                            <section id='skills-section' class='section hidden'>
+                                <h2>Skills</h2>
+                                <ul class='list-disc list-inside'>
+                                    <li>JavaScript (ES6+)</li>
+                                    <li>React.js, Vue.js</li>
+                                    <li>Node.js, Express.js</li>
+                                    <li>Python, Django, Flask</li>
+                                    <li>HTML5, CSS3, Tailwind CSS</li>
+                                    <li>Git, GitHub</li>
+                                </ul>
+                            </section>
+                            <section id='testimonials-section' class='section hidden'>
+                                <h2>Testimonials</h2>
+                                <div class='card mb-4'>
+                                    <p class='italic'>&quot;[Your Name] is an exceptional developer, highly recommended!&quot;</p>
+                                    <p class='text-right font-semibold'>- Client A</p>
+                                </div>
+                                <div class='card'>
+                                    <p class='italic'>&quot;Always delivers high-quality work on time.&quot;</p>
+                                    <p class='text-right font-semibold'>- Colleague B</p>
+                                </div>
+                            </section>
+                            <section id='contact-section' class='section hidden'>
+                                <h2>Contact Me</h2>
+                                <form class='contact-form'>
+                                    <label for='name'>Name:</label>
+                                    <input type='text' id='name' name='name' required>
+                                    <label for='email'>Email:</label>
+                                    <input type='email' id='email' name='email' required>
+                                    <label for='message'>Message:</label>
+                                    <textarea id='message' name='message' rows='5' required></textarea>
+                                    <button type='submit'>Send Message</button>
+                                </form>
+                            </section>
+                        </div>
+                    </body>
+                    </html>
+                "></iframe>
+            </div>
+            <!-- Section Editor (Placeholder) -->
+            <div class="panel p-4">
+                <h3 class="text-lg font-semibold mb-2">Selected Section Editor</h3>
+                <div id="section-editor-content">
+                    <p class="text-gray-600 dark:text-gray-400">Select a section to edit its content here.</p>
+                    <textarea id="current-section-text" class="input-field w-full h-40 mt-4 hidden" placeholder="Edit content here..."></textarea>
+                    <button id="save-section-content" class="btn-primary mt-4 hidden">Save Content</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for messages/alerts -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal">&times;</span>
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <p id="modal-message" class="mb-4"></p>
+            <button id="modal-ok-button" class="btn-primary">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase imports (for potential future collaboration features)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-portfolio-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId;
+        let isAuthReady = false;
+
+        // Initialize Firebase if config is available
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Authenticate user
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Firebase User ID:", userId);
+                    document.getElementById('current-user-id').textContent = userId;
+                } else {
+                    // Sign in anonymously if no token, or with custom token
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                        userId = auth.currentUser?.uid || crypto.randomUUID(); // Fallback if anonymous sign-in fails
+                        document.getElementById('current-user-id').textContent = userId;
+                        console.log("Firebase Authenticated. User ID:", userId);
+                    } catch (error) {
+                        console.error("Firebase authentication error:", error);
+                        userId = crypto.randomUUID(); // Generate a random ID if auth fails
+                        document.getElementById('current-user-id').textContent = `Anon (${userId.substring(0, 8)}...)`;
+                        showMessageModal('Authentication Error', 'Could not authenticate with Firebase. Some features may be limited. ' + error.message);
+                    }
+                }
+                isAuthReady = true;
+                // Once auth is ready, you can start listening to Firestore if needed
+                // setupFirestoreListeners(); // Call a function to set up listeners
+            });
+        } else {
+            console.warn("Firebase config not found. Collaboration features will not be available.");
+            document.getElementById('current-user-id').textContent = 'Not available (No Firebase)';
+            userId = crypto.randomUUID(); // Generate a random ID for local use
+        }
+
+        // --- DOM Elements ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const portfolioPreview = document.getElementById('portfolio-preview');
+        const viewToggleButtons = document.querySelectorAll('.view-toggle');
+        const sectionPicker = document.getElementById('section-picker');
+        const sectionButtons = document.querySelectorAll('.section-btn');
+        const aiWriteButton = document.getElementById('ai-write-button');
+        const aiOutput = document.getElementById('ai-output');
+        const githubIntegrationButton = document.getElementById('github-integration-button');
+        const githubReposDiv = document.getElementById('github-repos');
+        const currentSectionTextarea = document.getElementById('current-section-text');
+        const saveSectionContentButton = document.getElementById('save-section-content');
+
+        // Modal elements
+        const messageModal = document.getElementById('message-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalOkButton = document.getElementById('modal-ok-button');
+
+        // --- Helper Functions ---
+
+        /**
+         * Shows a custom modal message instead of alert().
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The message content.
+         */
+        function showMessageModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.style.display = 'flex'; // Use flex to center
+        }
+
+        // Close modal event listeners
+        closeModalButton.onclick = () => messageModal.style.display = 'none';
+        modalOkButton.onclick = () => messageModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == messageModal) {
+                messageModal.style.display = 'none';
+            }
+        };
+
+        /**
+         * Toggles between light and dark themes.
+         * Stores the preference in localStorage.
+         */
+        function toggleTheme() {
+            const isDarkMode = document.body.classList.toggle('dark');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            updateThemeIcons(isDarkMode);
+        }
+
+        /**
+         * Updates the visibility of sun/moon icons based on the current theme.
+         * @param {boolean} isDarkMode - True if dark mode is active, false otherwise.
+         */
+        function updateThemeIcons(isDarkMode) {
+            if (isDarkMode) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Applies the saved theme preference on page load.
+         */
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark');
+                updateThemeIcons(true);
+            } else {
+                updateThemeIcons(false);
+            }
+        }
+
+        /**
+         * Updates the preview iframe's content based on the currently active sections.
+         * This function simulates the "live preview" by manipulating the iframe's DOM.
+         */
+        function updatePreview() {
+            const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+            const portfolioContentDiv = iframeDoc.getElementById('portfolio-content');
+            if (!portfolioContentDiv) return;
+
+            // Hide all sections first
+            iframeDoc.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+
+            // Show only the active sections based on the section picker buttons
+            sectionButtons.forEach(button => {
+                if (button.classList.contains('active')) {
+                    const sectionId = button.dataset.section + '-section';
+                    const sectionElement = iframeDoc.getElementById(sectionId);
+                    if (sectionElement) {
+                        sectionElement.classList.remove('hidden');
+                    }
+                }
+            });
+
+            // Update the content of the currently selected section in the preview
+            const activeSectionButton = document.querySelector('.section-btn.active');
+            if (activeSectionButton) {
+                const sectionType = activeSectionButton.dataset.section;
+                const sectionTextId = sectionType + '-text'; // e.g., 'about-text'
+                const previewSectionTextElement = iframeDoc.getElementById(sectionTextId);
+                if (previewSectionTextElement) {
+                    previewSectionTextElement.textContent = currentSectionTextarea.value;
+                }
+            }
+        }
+
+        /**
+         * Handles section button clicks, updating active state and editor.
+         * @param {Event} event - The click event.
+         */
+        function handleSectionClick(event) {
+            sectionButtons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const sectionType = event.currentTarget.dataset.section;
+            const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+            const sectionElement = iframeDoc.getElementById(sectionType + '-section');
+
+            // Update the editor with the selected section's content
+            const editorPlaceholder = document.querySelector('#section-editor-content p');
+            if (editorPlaceholder) editorPlaceholder.classList.add('hidden');
+            currentSectionTextarea.classList.remove('hidden');
+            saveSectionContentButton.classList.remove('hidden');
+
+            let contentToEdit = '';
+            if (sectionType === 'about') {
+                const aboutText = iframeDoc.getElementById('about-text');
+                contentToEdit = aboutText ? aboutText.textContent : '';
+            } else if (sectionType === 'projects') {
+                // For projects, you'd typically edit structured data, not just text.
+                // This is a simplification for the demo.
+                contentToEdit = Array.from(iframeDoc.querySelectorAll('#projects-section .project-card'))
+                                .map(card => `### ${card.querySelector('h3').textContent}\n${card.querySelector('p:nth-of-type(1)').textContent}\nTech Stack: ${card.querySelector('p:nth-of-type(2)').textContent.replace('Tech Stack: ', '')}`)
+                                .join('\n\n');
+            } else if (sectionType === 'skills') {
+                contentToEdit = Array.from(iframeDoc.querySelectorAll('#skills-section li')).map(li => li.textContent).join('\n');
+            } else if (sectionType === 'testimonials') {
+                contentToEdit = Array.from(iframeDoc.querySelectorAll('#testimonials-section .card'))
+                                .map(card => `"${card.querySelector('p:nth-of-type(1)').textContent}" - ${card.querySelector('p:nth-of-type(2)').textContent}`)
+                                .join('\n\n');
+            } else if (sectionType === 'contact') {
+                contentToEdit = "This is the contact section. Form fields are edited directly in the HTML/JS, not via a simple text area. AI can help generate intro text.";
+                currentSectionTextarea.readOnly = true; // Make contact section read-only in this simple editor
+            }
+
+            currentSectionTextarea.value = contentToEdit;
+            currentSectionTextarea.dataset.section = sectionType; // Store active section for saving
+            updatePreview(); // Ensure only the active section is shown
+        }
+
+        /**
+         * Saves the content from the textarea back to the preview iframe.
+         */
+        function saveSectionContent() {
+            const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+            const sectionType = currentSectionTextarea.dataset.section;
+
+            if (sectionType === 'about') {
+                const aboutText = iframeDoc.getElementById('about-text');
+                if (aboutText) {
+                    aboutText.textContent = currentSectionTextarea.value;
+                }
+            } else if (sectionType === 'projects') {
+                // This is a simplified update. For real projects, you'd parse markdown/JSON.
+                const projectsContainer = iframeDoc.getElementById('projects-section');
+                if (projectsContainer) {
+                    // Clear existing projects (simplistic)
+                    Array.from(projectsContainer.querySelectorAll('.project-card')).forEach(card => card.remove());
+
+                    // Re-create from textarea content (very basic parsing)
+                    const projectEntries = currentSectionTextarea.value.split('\n\n').filter(entry => entry.trim() !== '');
+                    projectEntries.forEach(entry => {
+                        const lines = entry.split('\n');
+                        if (lines.length >= 3) {
+                            const title = lines[0].replace('### ', '');
+                            const description = lines[1];
+                            const techStack = lines[2].replace('Tech Stack: ', '');
+
+                            const newProjectCard = iframeDoc.createElement('div');
+                            newProjectCard.className = 'project-card';
+                            newProjectCard.innerHTML = `
+                                <h3>${title}</h3>
+                                <p>${description}</p>
+                                <p class='text-sm text-gray-500'>Tech Stack: ${techStack}</p>
+                            `;
+                            projectsContainer.appendChild(newProjectCard);
+                        }
+                    });
+                }
+            } else if (sectionType === 'skills') {
+                const skillsList = iframeDoc.querySelector('#skills-section ul');
+                if (skillsList) {
+                    skillsList.innerHTML = ''; // Clear existing
+                    currentSectionTextarea.value.split('\n').filter(s => s.trim() !== '').forEach(skill => {
+                        const li = iframeDoc.createElement('li');
+                        li.textContent = skill.trim();
+                        skillsList.appendChild(li);
+                    });
+                }
+            } else if (sectionType === 'testimonials') {
+                 const testimonialsContainer = iframeDoc.getElementById('testimonials-section');
+                if (testimonialsContainer) {
+                    // Clear existing testimonials (simplistic)
+                    Array.from(testimonialsContainer.querySelectorAll('.card')).forEach(card => card.remove());
+
+                    // Re-create from textarea content (very basic parsing)
+                    const testimonialEntries = currentSectionTextarea.value.split('\n\n').filter(entry => entry.trim() !== '');
+                    testimonialEntries.forEach(entry => {
+                        const match = entry.match(/^"(.*)" - (.*)$/);
+                        if (match && match.length === 3) {
+                            const quote = match[1];
+                            const author = match[2];
+
+                            const newTestimonialCard = iframeDoc.createElement('div');
+                            newTestimonialCard.className = 'card mb-4';
+                            newTestimonialCard.innerHTML = `
+                                <p class='italic'>&quot;${quote}&quot;</p>
+                                <p class='text-right font-semibold'>- ${author}</p>
+                            `;
+                            testimonialsContainer.appendChild(newTestimonialCard);
+                        }
+                    });
+                }
+            }
+            showMessageModal('Content Saved', `Content for the ${sectionType} section has been updated in the preview.`);
+        }
+
+        // --- Event Listeners ---
+
+        // Apply saved theme on load
+        document.addEventListener('DOMContentLoaded', applySavedTheme);
+
+        // Theme toggle button
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // View toggle buttons (Desktop, Tablet, Mobile)
+        viewToggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                viewToggleButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const view = button.dataset.view;
+                portfolioPreview.classList.remove('mobile', 'tablet'); // Remove existing classes
+                if (view === 'mobile') {
+                    portfolioPreview.classList.add('mobile');
+                } else if (view === 'tablet') {
+                    portfolioPreview.classList.add('tablet');
+                }
+                // Desktop is default, no specific class needed beyond removing others
+            });
+        });
+
+        // Section picker buttons
+        sectionButtons.forEach(button => {
+            button.addEventListener('click', handleSectionClick);
+        });
+
+        // Save section content button
+        saveSectionContentButton.addEventListener('click', saveSectionContent);
+
+        // Initial update of preview when iframe content loads
+        portfolioPreview.onload = () => {
+            updatePreview();
+            // Select 'About Me' by default on load
+            const defaultAboutButton = document.querySelector('.section-btn[data-section="about"]');
+            if (defaultAboutButton) {
+                defaultAboutButton.click();
+            }
+        };
+
+
+        // --- AI Text Assistant Integration (Placeholder with Gemini API Call) ---
+        aiWriteButton.addEventListener('click', async () => {
+            const activeSectionButton = document.querySelector('.section-btn.active');
+            if (!activeSectionButton) {
+                showMessageModal('No Section Selected', 'Please select a section (e.g., About Me, Projects) to generate text for.');
+                return;
+            }
+
+            const sectionType = activeSectionButton.dataset.section;
+            let prompt = `Generate a concise and professional 'About Me' section for a portfolio website. Focus on web development skills and a passion for creating innovative solutions.`;
+
+            if (sectionType === 'projects') {
+                prompt = `Generate a short, engaging description for a project card titled "Project Phoenix". It's a web app for collaborative document editing. Mention technologies like React, Node.js, and real-time collaboration.`;
+            } else if (sectionType === 'skills') {
+                prompt = `Generate a list of 5-7 common web development skills (e.g., JavaScript, React, Node.js, HTML, CSS, Git, Cloud). Format as a bulleted list.`;
+            } else if (sectionType === 'contact') {
+                prompt = `Generate a friendly and professional introductory paragraph for a 'Contact Me' section on a portfolio website. Encourage visitors to reach out for collaborations or inquiries.`;
+            } else if (sectionType === 'testimonials') {
+                prompt = `Generate a short, positive testimonial quote for a web developer, attributed to a satisfied client.`;
+            }
+
+            aiOutput.value = 'Generating text...';
+            aiWriteButton.disabled = true;
+
+            try {
+                // Gemini API call (using gemini-2.0-flash)
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will provide this at runtime if empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    aiOutput.value = text;
+                    currentSectionTextarea.value = text; // Auto-fill the editor
+                    showMessageModal('AI Generated', 'AI text generated successfully! Review and save the content.');
+                } else {
+                    aiOutput.value = 'Error: Could not generate text.';
+                    console.error('Gemini API response error:', result);
+                    showMessageModal('AI Error', 'Failed to generate text. Please try again.');
+                }
+            } catch (error) {
+                aiOutput.value = 'Error: API call failed.';
+                console.error('Error calling Gemini API:', error);
+                showMessageModal('API Call Error', 'An error occurred while calling the AI API. Check console for details.');
+            } finally {
+                aiWriteButton.disabled = false;
+            }
+        });
+
+        // --- GitHub API Integration (Placeholder) ---
+        githubIntegrationButton.addEventListener('click', async () => {
+            githubReposDiv.innerHTML = '<p>Fetching GitHub repos...</p>';
+            githubIntegrationButton.disabled = true;
+
+            // In a real application, you'd make a fetch call to GitHub API
+            // Example: https://api.github.com/users/YOUR_GITHUB_USERNAME/repos
+            // You might need a proxy or OAuth for rate limits/private repos.
+
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const mockRepos = [
+                    { name: 'Portfolio-V2', description: 'Next-gen portfolio with AI features.', stars: 150, forks: 20, url: '#' },
+                    { name: 'Task-Manager-App', description: 'Full-stack task management application.', stars: 80, forks: 10, url: '#' },
+                    { name: 'Simple-Game-Engine', description: 'A basic 2D game engine in JavaScript.', stars: 45, forks: 5, url: '#' }
+                ];
+
+                let reposHtml = '<h4 class="font-semibold mt-2">Pinned Repositories:</h4>';
+                mockRepos.forEach(repo => {
+                    reposHtml += `
+                        <div class="card mt-2 p-3 text-sm">
+                            <h5 class="font-bold text-blue-700 dark:text-blue-300">${repo.name}</h5>
+                            <p>${repo.description}</p>
+                            <div class="flex items-center space-x-3 mt-1 text-gray-500 dark:text-gray-400">
+                                <span><i class="fas fa-star"></i> ${repo.stars}</span>
+                                <span><i class="fas fa-code-branch"></i> ${repo.forks}</span>
+                                <a href="${repo.url}" target="_blank" class="text-blue-500 hover:underline">View on GitHub</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                githubReposDiv.innerHTML = reposHtml;
+                showMessageModal('GitHub Fetched', 'Mock GitHub repositories loaded successfully.');
+
+                // Update projects section in preview with fetched repos (simplified)
+                const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+                const projectsContainer = iframeDoc.getElementById('projects-section');
+                if (projectsContainer) {
+                    Array.from(projectsContainer.querySelectorAll('.project-card')).forEach(card => card.remove()); // Clear existing
+
+                    mockRepos.forEach(repo => {
+                        const newProjectCard = iframeDoc.createElement('div');
+                        newProjectCard.className = 'project-card';
+                        newProjectCard.innerHTML = `
+                            <h3>${repo.name}</h3>
+                            <p>${repo.description}</p>
+                            <p class='text-sm text-gray-500'>Tech Stack: GitHub Data</p>
+                            <a href="${repo.url}" target="_blank" class='text-blue-500 hover:underline text-sm'>View Project</a>
+                        `;
+                        projectsContainer.appendChild(newProjectCard);
+                    });
+                }
+
+
+            } catch (error) {
+                githubReposDiv.innerHTML = '<p class="text-red-500">Error fetching repos.</p>';
+                console.error('Error fetching GitHub repos:', error);
+                showMessageModal('GitHub Error', 'Failed to fetch GitHub repositories. Check console for details.');
+            } finally {
+                githubIntegrationButton.disabled = false;
+            }
+        });
+
+        // --- EmailJS/SMTP REST Integration (Placeholder) ---
+        // In the real app, you'd configure EmailJS or your SMTP REST endpoint
+        // and handle the form submission from the preview iframe.
+        // For this demo, the contact form in the iframe is just a visual placeholder.
+        // A full implementation would involve:
+        // 1. Loading EmailJS SDK (if using EmailJS) or setting up a fetch to your backend.
+        // 2. Getting the form element from the iframe: `iframeDoc.querySelector('.contact-form');`
+        // 3. Adding an event listener to the form's submit event.
+        // 4. Sending the form data via EmailJS or your API.
+        // 5. Showing success/error messages.
+        // Example structure for handling form submission from inside iframe:
+        /*
+        portfolioPreview.onload = () => {
+            const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+            const contactForm = iframeDoc.querySelector('.contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    showMessageModal('Sending Email', 'Attempting to send email...');
+                    const formData = new FormData(contactForm);
+                    const name = formData.get('name');
+                    const email = formData.get('email');
+                    const message = formData.get('message');
+
+                    // --- Replace with actual EmailJS/SMTP.js/your REST API call ---
+                    try {
+                        // Example: EmailJS
+                        // emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', { from_name: name, from_email: email, message: message })
+                        //     .then((response) => {
+                        //         showMessageModal('Email Sent!', 'Your message has been sent successfully.');
+                        //         contactForm.reset();
+                        //     }, (error) => {
+                        //         showMessageModal('Email Failed', 'Failed to send email. Please try again later.');
+                        //         console.error('EmailJS Error:', error);
+                        //     });
+
+                        // Simulate API call
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        showMessageModal('Email Sent!', 'Your message has been sent successfully (simulated).');
+                        contactForm.reset();
+
+                    } catch (error) {
+                        showMessageModal('Email Error', 'An error occurred while trying to send the email.');
+                        console.error('Contact form submission error:', error);
+                    }
+                });
+            }
+            updatePreview(); // Initial update after iframe loads
+            const defaultAboutButton = document.querySelector('.section-btn[data-section="about"]');
+            if (defaultAboutButton) {
+                defaultAboutButton.click();
+            }
+        };
+        */
+
+        // --- Drag & Drop Interface (Conceptual) ---
+        // Implementing a full drag-and-drop interface for reordering sections
+        // would require a dedicated library or significant vanilla JS code.
+        // Concepts:
+        // - Add `draggable="true"` to section elements.
+        // - Implement `dragstart`, `dragover`, `dragleave`, `drop`, `dragend` event listeners.
+        // - Manage the order of sections in an array and re-render the preview.
+        // - For "snap-to-grid" and responsive previews, you'd manipulate CSS grid/flex properties
+        //   and listen to `window.resize` events.
+        // - Keyboard accessibility would involve listening to arrow keys and `Tab` for focus,
+        //   and `Space`/`Enter` to trigger reordering actions.
+
+        // --- Real-Time Collaboration (Conceptual with Firestore) ---
+        // If Firebase Firestore were fully integrated for collaboration:
+        // 1. Data Model: Each portfolio would be a document in a 'portfolios' collection.
+        //    Sections would be sub-collections or arrays within the portfolio document.
+        // 2. Real-time Updates: Use `onSnapshot` listeners to get real-time updates for the
+        //    portfolio document. When a collaborator makes a change, all other connected
+        //    clients would see it instantly.
+        // 3. User Presence: You could track active users in a separate 'presence' collection.
+        // 4. Locking/Unlocking: Implement a simple locking mechanism by adding a 'lockedBy' field
+        //    to a section's data in Firestore. Only the user whose ID matches 'lockedBy' can edit.
+        // 5. Commenting: A 'comments' sub-collection for each section, with `addDoc` for new comments.
+        // Firestore security rules would be crucial to ensure users only access authorized data.
+        /*
+        function setupFirestoreListeners() {
+            if (!db || !userId || !isAuthReady) {
+                console.log("Firestore not ready for listeners.");
+                return;
+            }
+
+            // Example: Listen to a 'portfolio' document for the current user
+            const portfolioDocRef = doc(db, `artifacts/${appId}/users/${userId}/portfolios`, 'myPortfolio');
+
+            onSnapshot(portfolioDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("Current portfolio data:", data);
+                    // Update UI based on fetched data
+                    if (data.aboutMe) {
+                        const iframeDoc = portfolioPreview.contentDocument || portfolioPreview.contentWindow.document;
+                        const aboutText = iframeDoc.getElementById('about-text');
+                        if (aboutText) aboutText.textContent = data.aboutMe;
+                        currentSectionTextarea.value = data.aboutMe;
+                    }
+                    // ... update other sections
+                } else {
+                    console.log("No portfolio document found, creating a default one.");
+                    // Create a default portfolio if it doesn't exist
+                    setDoc(portfolioDocRef, {
+                        aboutMe: "I am a passionate developer...",
+                        projects: [],
+                        skills: [],
+                        contact: {},
+                        testimonials: [],
+                        theme: 'light'
+                    });
+                }
+            }, (error) => {
+                console.error("Error listening to portfolio document:", error);
+                showMessageModal('Firestore Error', 'Failed to load portfolio data in real-time.');
+            });
+        }
+        */
+
+    </script>
+</body>
+</html>
